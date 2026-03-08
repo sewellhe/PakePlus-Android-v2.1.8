@@ -3,82 +3,136 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="pink">
     <title>访问方式选择</title>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
-        html,body{height:100%;background:#f5f5f5;font-family:system-ui, -apple-system, sans-serif}
-        .container{display:flex;flex-direction:column;justify-content:center;align-items:center;height:100%;padding:20px}
-        .box{width:100%;max-width:360px;background:white;padding:24px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.08)}
-        h2{text-align:center;margin-bottom:20px;color:#1d2129;font-size:20px}
-        .countdown{text-align:center;margin:10px 0;font-size:15px;color:#ff7d00;font-weight:500}
-        .speed-info{text-align:center;margin:8px 0;font-size:14px;color:#4e5969}
-        .alert{background:#fff7e6;color:#d48806;padding:12px;border-radius:8px;margin:12px 0;text-align:center;font-size:14px}
-        .btn{display:block;width:100%;padding:18px;margin:15px 0;border:none;border-radius:12px;font-size:17px;font-weight:500;cursor:pointer;transition:all 0.2s}
-        .btn:active{transform:scale(0.98)}
-        .btn-ipv4{background:#1677ff;color:white}
-        .btn-ipv6{background:#00b42a;color:white}
-        .tip{text-align:center;margin-top:20px;font-size:14px;color:#86909c}
+        /* 背景添加猫咪轻量装饰，满屏氛围感 */
+        html,body{height:100%;background:linear-gradient(135deg, #faf0f5 0%, #fcf1f7 100%);font-family:system-ui, -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            position:relative;}
+        /* 背景散落猫咪元素（不遮挡内容，满屏效果） */
+        body::before, body::after, 
+        .container::before, .container::after {
+            content:"🐱";position:absolute;opacity:0.12;font-size:40px;pointer-events:none;
+        }
+        body::before{top:5%;left:5%;transform:rotate(-10deg);}
+        body::after{bottom:5%;right:5%;transform:rotate(10deg);}
+        .container::before{top:20%;right:8%;transform:rotate(5deg);font-size:30px;}
+        .container::after{bottom:20%;left:8%;transform:rotate(-5deg);font-size:30px;}
+        
+        .container{display:flex;flex-direction:column;justify-content:center;align-items:center;height:100%;padding:16px;
+            position:relative;z-index:1;/* 保证内容在猫咪装饰上层 */}
+        
+        /* 卡片内猫咪装饰更丰富，满屏但不杂乱 */
+        .box{width:100%;max-width:380px;background:white;padding:30px 26px;border-radius:22px;
+            box-shadow:0 6px 24px rgba(228, 189, 210, 0.12);border:1px solid #faf0f5;position:relative;overflow:hidden;
+            transform:translateZ(0);}
+        /* 卡片内多位置猫咪装饰 */
+        .box .cat-deco-1{content:"🐾";position:absolute;top:12px;left:12px;font-size:20px;opacity:0.5;}
+        .box .cat-deco-2{content:"🐱";position:absolute;top:18px;right:18px;font-size:24px;opacity:0.65;}
+        .box .cat-deco-3{content:"🐾";position:absolute;bottom:12px;right:12px;font-size:20px;opacity:0.5;}
+        .box .cat-deco-4{content:"🐈";position:absolute;bottom:18px;left:18px;font-size:18px;opacity:0.55;}
+        .box .cat-deco-5{content:"😺";position:absolute;top:50%;left:-10px;transform:translateY(-50%);font-size:16px;opacity:0.4;}
+        .box .cat-deco-6{content:"😺";position:absolute;top:50%;right:-10px;transform:translateY(-50%);font-size:16px;opacity:0.4;}
+
+        h2{text-align:center;margin-bottom:22px;color:#802268;font-size:20px;font-weight:500;letter-spacing:0.6px;
+            display:flex;align-items:center;justify-content:center;gap:8px;}
+        h2::before, h2::after{content:"🐾";font-size:18px;opacity:0.7;margin:0 8px;}
+        
+        .countdown{text-align:center;margin:8px 0;font-size:15px;color:#d66598;font-weight:400;line-height:1.4;}
+        .speed-info{text-align:center;margin:10px 0;font-size:14px;color:#7b4a88;line-height:1.4;padding:0 4px;}
+        /* 按钮添加猫咪小装饰 */
+        .btn{display:block;width:100%;padding:18px;margin:14px 0;border:none;border-radius:16px;font-size:16px;
+            font-weight:500;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;
+            -webkit-tap-highlight-color: transparent;}
+        .btn::before{content:"🐱";position:absolute;left:18px;top:50%;transform:translateY(-50%);font-size:16px;opacity:0.8;}
+        .btn::after{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;
+            background:linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);transition:0.6s;}
+        .btn span{margin-left:24px;/* 给按钮内猫咪图标留位置 */}
+        .btn:hover::after{left:100%}
+        .btn:active{transform:scale(0.98);}
+        
+        .btn-ipv4{background:linear-gradient(90deg, #e890b8, #e5689f);color:white;box-shadow:0 3px 12px rgba(229, 104, 159, 0.18);}
+        .btn-ipv6{background:linear-gradient(90deg, #9a74d1, #8073e0);color:white;box-shadow:0 3px 12px rgba(128, 115, 224, 0.18);}
+        
+        .tip{text-align:center;margin-top:20px;font-size:13px;color:#8850a8;padding-top:10px;border-top:1px dashed #faf0f5;
+            line-height:1.4;display:flex;align-items:center;justify-content:center;gap:6px;}
+        .tip::before{content:"🐾";font-size:14px;opacity:0.7;}
+        
+        @keyframes pulse {
+            0%{opacity:0.75}
+            50%{opacity:1}
+            100%{opacity:0.75}
+        }
+        .speed-info.loading{animation:pulse 1.8s infinite;}
     </style>
 </head>
 <body>
     <div class="container">
         <div class="box">
-            <h2>选择访问方式</h2>
-            <div class="countdown" id="countdown">3秒后自动进入IPv4（点击按钮可取消）</div>
-            <div class="speed-info" id="speedInfo">正在检测网络速度...</div>
+            <!-- 卡片内猫咪装饰节点 -->
+            <div class="cat-deco-1"></div>
+            <div class="cat-deco-2"></div>
+            <div class="cat-deco-3"></div>
+            <div class="cat-deco-4"></div>
+            <div class="cat-deco-5"></div>
+            <div class="cat-deco-6"></div>
+            
+            <h2>访问通道选择</h2>
+            <div class="countdown" id="countdown">3秒后自动进入IPv4通道（点击可取消）</div>
+            <div class="speed-info loading" id="speedInfo">🐱 正在检测网络状态...</div>
             <div id="alertBox"></div>
-            <button class="btn btn-ipv4" onclick="goIPv4(true)">IPv4 访问（优先）</button>
-            <button class="btn btn-ipv6" onclick="goIPv6(true)">IPv6 访问（网络卡时用）</button>
-            <p class="tip">网络卡顿请切换为 IPv6 访问</p>
+            
+            <button class="btn btn-ipv4" onclick="goIPv4(true)"><span>IPv4 优先通道</span></button>
+            <button class="btn btn-ipv6" onclick="goIPv6(true)"><span>IPv6 备用通道</span></button>
+            
+            <p class="tip">若访问不顺畅，可切换至备用通道哦</p>
         </div>
     </div>
 
     <script>
-        // 你的最新地址
-        const IPV4_URL = "http://8.137.162.29:6307/";
-        const IPV6_URL = "http://heshiwei.xin:6307/";
-        const MAX_DELAY = 300; // IPv4延迟阈值
-        const COUNTDOWN_TIME = 3000; // 3秒自动跳转
-        let countdownTimer; // 倒计时定时器
-        let autoJumpTimer; // 自动跳转定时器
+        const IPV4_URL = "https://pyq.hexixi.cc/";
+        const IPV6_URL = "http://heshiwei.xin:6308/";
+        const MAX_DELAY = 300; 
+        const COUNTDOWN_TIME = 3000; 
+        let countdownTimer; 
+        let autoJumpTimer; 
 
-        // 初始化倒计时
         function initCountdown() {
             let remaining = 3;
             const countdownEl = document.getElementById('countdown');
             countdownTimer = setInterval(() => {
                 remaining--;
                 if (remaining > 0) {
-                    countdownEl.textContent = `${remaining}秒后自动进入IPv4（点击按钮可取消）`;
+                    countdownEl.textContent = `${remaining}秒后自动进入IPv4通道（点击可取消）`;
                 } else {
                     clearInterval(countdownTimer);
-                    countdownEl.textContent = "即将自动进入IPv4...";
-                    goIPv4(false); // 自动跳转（不清除定时器，因为倒计时已结束）
+                    countdownEl.textContent = "🐱 即将进入IPv4通道...";
+                    goIPv4(false); 
                 }
             }, 1000);
         }
 
-        // 跳转函数（isManual：是否手动点击）
         function goIPv4(isManual) {
-            // 清除所有定时器（手动点击时取消自动跳转）
             if (isManual) {
                 clearInterval(countdownTimer);
                 clearTimeout(autoJumpTimer);
-                document.getElementById('countdown').textContent = "已选择IPv4访问";
+                document.getElementById('countdown').textContent = "🐱 已选择IPv4优先通道";
             }
             window.open(IPV4_URL, '_top');
         }
         function goIPv6(isManual) {
-            // 清除所有定时器（手动点击时取消自动跳转）
             if (isManual) {
                 clearInterval(countdownTimer);
                 clearTimeout(autoJumpTimer);
-                document.getElementById('countdown').textContent = "已选择IPv6访问";
+                document.getElementById('countdown').textContent = "🐱 已选择IPv6备用通道";
             }
             window.open(IPV6_URL, '_top');
         }
 
-        // 测速函数
         async function testSpeed(url) {
             const start = Date.now();
             try {
@@ -89,29 +143,25 @@
             }
         }
 
-        // 页面加载后执行
         window.onload = async function () {
-            // 启动3秒倒计时
             initCountdown();
             
-            // 测速并提示
             const ipv4Delay = await testSpeed(IPV4_URL);
             const speedInfo = document.getElementById('speedInfo');
+            speedInfo.classList.remove('loading');
             const alertBox = document.getElementById('alertBox');
 
             if (ipv4Delay === Infinity) {
-                speedInfo.textContent = "IPv4 访问失败，建议手动选择IPv6";
-                alertBox.innerHTML = '<div class="alert">⚠️ IPv4 网络异常，建议切换到 IPv6</div>';
-                // IPv4访问失败时，取消自动跳转
+                speedInfo.textContent = "🐱 IPv4 通道暂无法访问，建议选择备用通道";
+                alertBox.innerHTML = '<div class="alert">🐾 IPv4 网络状态异常，可切换至 IPv6 备用通道</div>';
                 clearInterval(countdownTimer);
                 clearTimeout(autoJumpTimer);
-                document.getElementById('countdown').textContent = "IPv4不可用，请手动选择IPv6";
+                document.getElementById('countdown').textContent = "IPv4通道不可用，请选择备用通道";
             } else if (ipv4Delay > MAX_DELAY) {
-                speedInfo.textContent = `IPv4 延迟：${ipv4Delay}ms（较慢），建议手动选择IPv6`;
-                alertBox.innerHTML = '<div class="alert">⚠️ 当前网络较慢，建议切换到 IPv6</div>';
+                speedInfo.textContent = `🐱 IPv4 通道延迟 ${ipv4Delay}ms，建议切换备用通道`;
+                alertBox.innerHTML = '<div class="alert">🐾 当前IPv4通道稍缓，切换备用通道体验更佳</div>';
             } else {
-                speedInfo.textContent = `IPv4 延迟：${ipv4Delay}ms（正常）`;
-                // 延迟正常，3秒后自动跳转（和倒计时联动）
+                speedInfo.textContent = `🐱 IPv4 通道状态良好，可正常访问`;
                 autoJumpTimer = setTimeout(goIPv4, COUNTDOWN_TIME);
             }
         };
