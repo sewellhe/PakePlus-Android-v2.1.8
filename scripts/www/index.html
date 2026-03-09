@@ -1,11 +1,315 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>PakePlus</title>
-    </head>
-    <body>
-        PakePlus
-    </body>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>访问方式选择</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        html, body {
+            height: 100%;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            padding: 16px;
+        }
+        .box {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            padding: 28px 20px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        /* 顶部装饰 */
+        .box::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #1677ff, #00b42a);
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 24px;
+            color: #1d2129;
+            font-size: 22px;
+            font-weight: 600;
+        }
+        .countdown {
+            text-align: center;
+            margin: 8px 0 16px;
+            font-size: 16px;
+            color: #ff7d00;
+            font-weight: 500;
+            padding: 8px;
+            border-radius: 8px;
+            background: #fff7e6;
+        }
+        .speed-container {
+            display: flex;
+            justify-content: space-between;
+            margin: 12px 0;
+            gap: 8px;
+        }
+        .speed-card {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            text-align: center;
+        }
+        .speed-title {
+            font-size: 14px;
+            color: #4e5969;
+            margin-bottom: 4px;
+        }
+        .speed-value {
+            font-size: 15px;
+            color: #1d2129;
+            font-weight: 500;
+        }
+        .speed-warning {
+            color: #f53f3f;
+        }
+        .speed-normal {
+            color: #00b42a;
+        }
+        .alert {
+            background: #fff7e6;
+            color: #d48806;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+            text-align: center;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 18px 0;
+            margin: 12px 0;
+            border: none;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: white;
+        }
+        .btn:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+        .btn-ipv4 {
+            background: linear-gradient(135deg, #1677ff, #0958d9);
+        }
+        .btn-ipv6 {
+            background: linear-gradient(135deg, #00b42a, #008721);
+        }
+        .tip {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #86909c;
+            line-height: 1.5;
+        }
+        /* 适配小屏手机 */
+        @media (max-width: 375px) {
+            .box {
+                padding: 20px 16px;
+            }
+            h2 {
+                font-size: 20px;
+                margin-bottom: 20px;
+            }
+            .btn {
+                padding: 16px 0;
+                font-size: 16px;
+            }
+            .speed-card {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="box">
+            <h2>选择最佳访问方式</h2>
+            <div class="countdown" id="countdown">3秒后自动选择最佳线路（点击按钮可取消）</div>
+            
+            <!-- 测速结果展示 -->
+            <div class="speed-container">
+                <div class="speed-card">
+                    <div class="speed-title">IPv4 延迟</div>
+                    <div class="speed-value" id="ipv4Speed">检测中...</div>
+                </div>
+                <div class="speed-card">
+                    <div class="speed-title">IPv6 延迟</div>
+                    <div class="speed-value" id="ipv6Speed">检测中...</div>
+                </div>
+            </div>
+
+            <div id="alertBox"></div>
+            
+            <button class="btn btn-ipv4" onclick="goIPv4(true)">IPv4 访问（优先）</button>
+            <button class="btn btn-ipv6" onclick="goIPv6(true)">IPv6 访问（备用）</button>
+            
+            <p class="tip">网络卡顿会自动切换最优线路<br>手动点击按钮可立即跳转对应地址</p>
+        </div>
+    </div>
+
+    <script>
+        // 配置参数
+        const IPV4_URL = "https://hsw.hexixi.cc/";
+        const IPV6_URL = "http://heshiwei.xin:6307/";
+        const MAX_DELAY = 300; // IPv4延迟阈值（ms）
+        const COUNTDOWN_TIME = 3000; // 3秒自动跳转
+        let countdownTimer; // 倒计时定时器
+        let autoJumpTimer; // 自动跳转定时器
+        let ipv4Delay = 0; // IPv4延迟
+        let ipv6Delay = 0; // IPv6延迟
+
+        // 初始化倒计时
+        function initCountdown() {
+            let remaining = 3;
+            const countdownEl = document.getElementById('countdown');
+            
+            countdownTimer = setInterval(() => {
+                remaining--;
+                if (remaining > 0) {
+                    countdownEl.textContent = `${remaining}秒后自动选择最佳线路（点击按钮可取消）`;
+                } else {
+                    clearInterval(countdownTimer);
+                    countdownEl.textContent = "正在跳转最佳线路...";
+                    autoJumpToBestRoute(); // 自动跳转到最优线路
+                }
+            }, 1000);
+        }
+
+        // 自动跳转到最优线路
+        function autoJumpToBestRoute() {
+            // 如果IPv4延迟超过阈值，跳IPv6；否则跳IPv4
+            if (ipv4Delay > MAX_DELAY || ipv4Delay === Infinity) {
+                goIPv6(false);
+            } else {
+                goIPv4(false);
+            }
+        }
+
+        // 跳转函数（isManual：是否手动点击）
+        function goIPv4(isManual) {
+            // 清除所有定时器（手动点击时取消自动跳转）
+            if (isManual) {
+                clearInterval(countdownTimer);
+                clearTimeout(autoJumpTimer);
+                document.getElementById('countdown').textContent = "已选择IPv4访问";
+            }
+            window.location.href = IPV4_URL; // 替换open为location.href，跳转更稳定
+        }
+
+        function goIPv6(isManual) {
+            // 清除所有定时器（手动点击时取消自动跳转）
+            if (isManual) {
+                clearInterval(countdownTimer);
+                clearTimeout(autoJumpTimer);
+                document.getElementById('countdown').textContent = "已选择IPv6访问";
+            }
+            window.location.href = IPV6_URL;
+        }
+
+        // 测速函数
+        async function testSpeed(url) {
+            const start = Date.now();
+            try {
+                // 使用GET方法提高兼容性，添加超时控制
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
+                
+                await fetch(url, { 
+                    method: 'GET', 
+                    mode: 'no-cors',
+                    signal: controller.signal,
+                    cache: 'no-cache'
+                });
+                
+                clearTimeout(timeoutId);
+                return Date.now() - start;
+            } catch (e) {
+                return Infinity; // 访问失败返回无穷大
+            }
+        }
+
+        // 更新测速显示
+        function updateSpeedDisplay() {
+            const ipv4SpeedEl = document.getElementById('ipv4Speed');
+            const ipv6SpeedEl = document.getElementById('ipv6Speed');
+            const alertBox = document.getElementById('alertBox');
+            let alertHtml = "";
+
+            // 更新IPv4显示
+            if (ipv4Delay === Infinity) {
+                ipv4SpeedEl.textContent = "访问失败";
+                ipv4SpeedEl.className = "speed-value speed-warning";
+                alertHtml += '<div class="alert">⚠️ IPv4访问失败，将自动切换到IPv6</div>';
+            } else {
+                ipv4SpeedEl.textContent = `${ipv4Delay}ms`;
+                ipv4SpeedEl.className = ipv4Delay > MAX_DELAY 
+                    ? "speed-value speed-warning" 
+                    : "speed-value speed-normal";
+                
+                if (ipv4Delay > MAX_DELAY) {
+                    alertHtml += '<div class="alert">⚠️ IPv4延迟过高，将自动切换到IPv6</div>';
+                }
+            }
+
+            // 更新IPv6显示
+            if (ipv6Delay === Infinity) {
+                ipv6SpeedEl.textContent = "访问失败";
+                ipv6SpeedEl.className = "speed-value speed-warning";
+                if (ipv4Delay > MAX_DELAY) {
+                    alertHtml += '<div class="alert">⚠️ IPv6也访问失败，请检查网络</div>';
+                }
+            } else {
+                ipv6SpeedEl.textContent = `${ipv6Delay}ms`;
+                ipv6SpeedEl.className = "speed-value speed-normal";
+            }
+
+            // 显示提示
+            alertBox.innerHTML = alertHtml;
+        }
+
+        // 页面加载后执行
+        window.onload = async function () {
+            // 启动3秒倒计时
+            initCountdown();
+            
+            // 同时测速IPv4和IPv6
+            [ipv4Delay, ipv6Delay] = await Promise.all([
+                testSpeed(IPV4_URL),
+                testSpeed(IPV6_URL)
+            ]);
+            
+            // 更新测速结果显示
+            updateSpeedDisplay();
+        }
+    </script>
+</body>
 </html>
