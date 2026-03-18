@@ -186,6 +186,7 @@
         let autoJumpTimer; // 自动跳转定时器
         let ipv4Delay = 0; // IPv4延迟
         let ipv6Delay = 0; // IPv6延迟
+        let isJumping = false; // 防止重复跳转标记
 
         // 初始化倒计时
         function initCountdown() {
@@ -193,6 +194,9 @@
             const countdownEl = document.getElementById('countdown');
             
             countdownTimer = setInterval(() => {
+                // 如果已经开始跳转，停止倒计时
+                if (isJumping) return;
+                
                 remaining--;
                 if (remaining > 0) {
                     countdownEl.textContent = `${remaining}秒后自动选择最佳线路（点击按钮可取消）`;
@@ -204,8 +208,19 @@
             }, 1000);
         }
 
+        // 清理所有定时器
+        function clearAllTimers() {
+            clearInterval(countdownTimer);
+            clearTimeout(autoJumpTimer);
+            // 清理所有可能的定时器（增强版）
+            window.onbeforeunload = null;
+        }
+
         // 自动跳转到最优线路
         function autoJumpToBestRoute() {
+            if (isJumping) return;
+            isJumping = true;
+            
             // 如果IPv4延迟超过阈值，跳IPv6；否则跳IPv4
             if (ipv4Delay > MAX_DELAY || ipv4Delay === Infinity) {
                 goIPv6(false);
@@ -216,27 +231,40 @@
 
         // 跳转函数（isManual：是否手动点击）
         function goIPv4(isManual) {
+            if (isJumping) return;
+            isJumping = true;
+            
             // 清除所有定时器（手动点击时取消自动跳转）
+            clearAllTimers();
+            
             if (isManual) {
-                clearInterval(countdownTimer);
-                clearTimeout(autoJumpTimer);
-                document.getElementById('countdown').textContent = "已选择IPv4访问";
+                document.getElementById('countdown').textContent = "已选择IPv4访问，正在跳转...";
             }
-            window.location.href = IPV4_URL; // 替换open为location.href，跳转更稳定
+            
+            // 使用replace替代href，移除当前页面从历史记录
+            window.location.replace(IPV4_URL);
         }
 
         function goIPv6(isManual) {
+            if (isJumping) return;
+            isJumping = true;
+            
             // 清除所有定时器（手动点击时取消自动跳转）
+            clearAllTimers();
+            
             if (isManual) {
-                clearInterval(countdownTimer);
-                clearTimeout(autoJumpTimer);
-                document.getElementById('countdown').textContent = "已选择IPv6访问";
+                document.getElementById('countdown').textContent = "已选择IPv6访问，正在跳转...";
             }
-            window.location.href = IPV6_URL;
+            
+            // 使用replace替代href，移除当前页面从历史记录
+            window.location.replace(IPV6_URL);
         }
 
         // 测速函数
         async function testSpeed(url) {
+            // 如果已经开始跳转，停止测速
+            if (isJumping) return Infinity;
+            
             const start = Date.now();
             try {
                 // 使用GET方法提高兼容性，添加超时控制
@@ -259,6 +287,9 @@
 
         // 更新测速显示
         function updateSpeedDisplay() {
+            // 如果已经开始跳转，停止更新
+            if (isJumping) return;
+            
             const ipv4SpeedEl = document.getElementById('ipv4Speed');
             const ipv6SpeedEl = document.getElementById('ipv6Speed');
             const alertBox = document.getElementById('alertBox');
@@ -295,6 +326,11 @@
             // 显示提示
             alertBox.innerHTML = alertHtml;
         }
+
+        // 页面卸载前的清理
+        window.onbeforeunload = function() {
+            clearAllTimers();
+        };
 
         // 页面加载后执行
         window.onload = async function () {
