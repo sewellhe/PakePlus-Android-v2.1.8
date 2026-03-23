@@ -1,351 +1,356 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>访问方式选择</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网络测速与自动跳转</title>
     <style>
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
         }
-        html, body {
-            height: 100%;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-        }
-        .container {
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+            min-height: 100vh;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100%;
-            padding: 16px;
+            padding: 20px;
         }
-        .box {
-            width: 100%;
-            max-width: 400px;
-            background: white;
-            padding: 28px 20px;
+        
+        .container {
+            background-color: white;
             border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            padding: 28px;
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #2d3436;
+            margin-bottom: 24px;
+            font-size: 22px;
+            font-weight: 700;
+        }
+        
+        .countdown-bar {
+            background: linear-gradient(45deg, #fdcb6e, #e17055);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 28px;
+            display: inline-block;
+            box-shadow: 0 4px 12px rgba(231, 110, 85, 0.3);
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        
+        .status-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .status-title {
+            font-size: 13px;
+            color: #636e72;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        
+        .status-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2d3436;
+        }
+        
+        .status-testing {
+            color: #0984e3;
+        }
+        
+        .status-success {
+            color: #00b894;
+        }
+        
+        .status-failed {
+            color: #d63031;
+        }
+        
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        
+        .access-btn {
+            border: none;
+            border-radius: 12px;
+            padding: 18px;
+            font-size: 17px;
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
         }
-        /* 顶部装饰 */
-        .box::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #1677ff, #00b42a);
+        
+        .access-btn.ipv4 {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            box-shadow: 0 6px 20px rgba(9, 132, 227, 0.4);
         }
-        h2 {
-            text-align: center;
-            margin-bottom: 24px;
-            color: #1d2129;
-            font-size: 22px;
-            font-weight: 600;
+        
+        .access-btn.ipv6 {
+            background: linear-gradient(135deg, #55efc4, #00b894);
+            box-shadow: 0 6px 20px rgba(0, 184, 148, 0.4);
         }
-        .countdown {
-            text-align: center;
-            margin: 8px 0 16px;
-            font-size: 16px;
-            color: #ff7d00;
-            font-weight: 500;
-            padding: 8px;
-            border-radius: 8px;
-            background: #fff7e6;
+        
+        .access-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
         }
-        .speed-container {
-            display: flex;
-            justify-content: space-between;
-            margin: 12px 0;
-            gap: 8px;
+        
+        .footer-text {
+            font-size: 13px;
+            color: #636e72;
+            line-height: 1.6;
         }
-        .speed-card {
-            flex: 1;
-            padding: 12px;
-            border-radius: 10px;
-            background: #f8f9fa;
-            text-align: center;
-        }
-        .speed-title {
-            font-size: 14px;
-            color: #4e5969;
-            margin-bottom: 4px;
-        }
-        .speed-value {
-            font-size: 15px;
-            color: #1d2129;
-            font-weight: 500;
-        }
-        .speed-warning {
-            color: #f53f3f;
-        }
-        .speed-normal {
-            color: #00b42a;
-        }
-        .alert {
-            background: #fff7e6;
-            color: #d48806;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin: 16px 0;
-            text-align: center;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-        .btn {
-            display: block;
+        
+        .progress-bar {
             width: 100%;
-            padding: 18px 0;
-            margin: 12px 0;
-            border: none;
-            border-radius: 12px;
-            font-size: 17px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            color: white;
+            height: 4px;
+            background-color: #e0e0e0;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 8px;
         }
-        .btn:active {
-            transform: scale(0.98);
-            opacity: 0.9;
+        
+        .progress-bar-fill {
+            height: 100%;
+            background-color: #3498db;
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.2s ease;
         }
-        .btn-ipv4 {
-            background: linear-gradient(135deg, #1677ff, #0958d9);
-        }
-        .btn-ipv6 {
-            background: linear-gradient(135deg, #00b42a, #008721);
-        }
-        .tip {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 14px;
-            color: #86909c;
-            line-height: 1.5;
-        }
-        /* 适配小屏手机 */
-        @media (max-width: 375px) {
-            .box {
-                padding: 20px 16px;
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
             }
-            h2 {
+            
+            h1 {
                 font-size: 20px;
-                margin-bottom: 20px;
             }
-            .btn {
-                padding: 16px 0;
+            
+            .server-card {
+                padding: 15px;
+            }
+            
+            .server-name {
                 font-size: 16px;
             }
-            .speed-card {
+            
+            .server-url {
+                font-size: 11px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
                 padding: 10px;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 18px;
+            }
+            
+            .server-list {
+                grid-template-columns: 1fr;
+                gap: 15px;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="box">
-            <h2>选择最佳访问方式</h2>
-            <div class="countdown" id="countdown">3秒后自动选择最佳线路（点击按钮可取消）</div>
-            
-            <!-- 测速结果展示 -->
-            <div class="speed-container">
-                <div class="speed-card">
-                    <div class="speed-title">IPv4 延迟</div>
-                    <div class="speed-value" id="ipv4Speed">检测中...</div>
-                </div>
-                <div class="speed-card">
-                    <div class="speed-title">IPv6 延迟</div>
-                    <div class="speed-value" id="ipv6Speed">检测中...</div>
+        <h1>选择最佳访问方式</h1>
+        
+        <div class="countdown-bar" id="countdownBar">测速中...（点击按钮可立即选择）</div>
+        
+        <div class="status-grid">
+            <div class="status-card">
+                <div class="status-title">IPv4 延迟</div>
+                <div class="status-value status-testing" id="ipv4Status">检测中...</div>
+                <div class="progress-bar">
+                    <div class="progress-bar-fill" id="ipv4Progress"></div>
                 </div>
             </div>
-
-            <div id="alertBox"></div>
             
-            <button class="btn btn-ipv4" onclick="goIPv4(true)">IPv4 访问（优先）</button>
-            <button class="btn btn-ipv6" onclick="goIPv6(true)">IPv6 访问（备用）</button>
-            
-            <p class="tip">网络卡顿会自动切换最优线路<br>手动点击按钮可立即跳转对应地址</p>
+            <div class="status-card">
+                <div class="status-title">IPv6 延迟</div>
+                <div class="status-value status-testing" id="ipv6Status">检测中...</div>
+                <div class="progress-bar">
+                    <div class="progress-bar-fill" id="ipv6Progress"></div>
+                </div>
+            </div>
         </div>
-    </div>
+        
+        <div class="button-group">
+            <button class="access-btn ipv4" id="ipv4Btn" onclick="selectServer(0)">IPv4 访问</button>
+            <button class="access-btn ipv6" id="ipv6Btn" onclick="selectServer(1)">IPv6 访问</button>
+        </div>
+        
+        <div class="footer-text">
+            网络卡顿会自动切换最优线路<br>
+            手动点击按钮可立即跳转对应地址
+        </div>
 
     <script>
-        // 配置参数
-        const IPV4_URL = "https://hsw.hexixi.cc/";
-        const IPV6_URL = "http://heshiwei.xin:6307/";
-        const MAX_DELAY = 300; // IPv4延迟阈值（ms）
-        const COUNTDOWN_TIME = 3000; // 3秒自动跳转
-        let countdownTimer; // 倒计时定时器
-        let autoJumpTimer; // 自动跳转定时器
-        let ipv4Delay = 0; // IPv4延迟
-        let ipv6Delay = 0; // IPv6延迟
-        let isJumping = false; // 防止重复跳转标记
+        // 配置服务器地址
+        const servers = [
+            { name: 'IPv4', url: 'https://hsw.hexixi.cc', displayName: 'IPv4 服务器' },
+            { name: 'IPv6', url: 'http://heshiwei.xin:6307', displayName: 'IPv6 服务器' }
+        ];
 
-        // 初始化倒计时
-        function initCountdown() {
-            let remaining = 3;
-            const countdownEl = document.getElementById('countdown');
+        let testResults = [];
+        let redirectTimer = null;
+
+        // 更新服务器状态
+        function updateServerStatus(index, status, latency = null) {
+            const statusElement = document.getElementById(index === 0 ? 'ipv4Status' : 'ipv6Status');
             
-            countdownTimer = setInterval(() => {
-                // 如果已经开始跳转，停止倒计时
-                if (isJumping) return;
+            if (status === 'testing') {
+                statusElement.className = 'status-value status-testing';
+                statusElement.textContent = '检测中...';
+            } else if (status === 'success') {
+                statusElement.className = 'status-value status-success';
+                statusElement.textContent = `${Math.round(latency)}ms`;
+            } else if (status === 'failed') {
+                statusElement.className = 'status-value status-failed';
+                statusElement.textContent = '连接失败';
+            }
+        }
+
+        // 更新进度条
+        function updateProgressBar(index, progress) {
+            const progressBar = document.getElementById(index === 0 ? 'ipv4Progress' : 'ipv6Progress');
+            progressBar.style.width = `${progress}%`;
+        }
+
+        // 测试函数
+        async function testServer(server, index) {
+            updateServerStatus(index, 'testing');
+            
+            // 模拟进度条动画
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 5;
+                updateProgressBar(index, Math.min(progress, 90));
+                if (progress >= 90) {
+                    clearInterval(progressInterval);
+                }
+            }, 100);
+
+            const startTime = performance.now();
+            try {
+                // 设置3秒超时
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
                 
-                remaining--;
-                if (remaining > 0) {
-                    countdownEl.textContent = `${remaining}秒后自动选择最佳线路（点击按钮可取消）`;
-                } else {
-                    clearInterval(countdownTimer);
-                    countdownEl.textContent = "正在跳转最佳线路...";
-                    autoJumpToBestRoute(); // 自动跳转到最优线路
+                const response = await fetch(server.url, {
+                    method: 'HEAD',
+                    mode: 'no-cors',
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                
+                const endTime = performance.now();
+                const latency = endTime - startTime;
+                
+                clearInterval(progressInterval);
+                updateProgressBar(index, 100);
+                updateServerStatus(index, 'success', latency);
+                
+                return { ...server, latency, error: null };
+            } catch (error) {
+                clearInterval(progressInterval);
+                updateProgressBar(index, 100);
+                updateServerStatus(index, 'failed');
+                
+                return { ...server, latency: Infinity, error: error.message };
+            }
+        }
+
+        // 手动选择服务器
+        function selectServer(index) {
+            if (redirectTimer) {
+                clearInterval(redirectTimer);
+            }
+            // 使用replace防止用户返回测速页面
+            window.location.replace(servers[index].url);
+        }
+
+        // 显示倒计时
+        function showCountdown() {
+            let seconds = 2;
+            const countdownBar = document.getElementById('countdownBar');
+            
+            countdownBar.textContent = `${seconds}秒后自动选择最佳线路（点击按钮可取消）`;
+            
+            redirectTimer = setInterval(() => {
+                seconds--;
+                countdownBar.textContent = `${seconds}秒后自动选择最佳线路（点击按钮可取消）`;
+                
+                if (seconds <= 0) {
+                    clearInterval(redirectTimer);
+                    // 自动选择延迟最低的服务器
+                    const fastestServer = testResults.reduce((best, current) => 
+                        current.latency < best.latency ? current : best
+                    );
+                    if (fastestServer.latency < Infinity) {
+                        // 使用replace防止用户返回测速页面
+                        window.location.replace(fastestServer.url);
+                    }
                 }
             }, 1000);
         }
 
-        // 清理所有定时器
-        function clearAllTimers() {
-            clearInterval(countdownTimer);
-            clearTimeout(autoJumpTimer);
-            // 清理所有可能的定时器（增强版）
-            window.onbeforeunload = null;
-        }
-
-        // 自动跳转到最优线路
-        function autoJumpToBestRoute() {
-            if (isJumping) return;
-            isJumping = true;
+        // 主函数
+        async function runSpeedTest() {
+            testResults = await Promise.all(servers.map((server, index) => testServer(server, index)));
             
-            // 如果IPv4延迟超过阈值，跳IPv6；否则跳IPv4
-            if (ipv4Delay > MAX_DELAY || ipv4Delay === Infinity) {
-                goIPv6(false);
-            } else {
-                goIPv4(false);
+            // 启动倒计时
+            const fastestServer = testResults.reduce((best, current) => 
+                current.latency < best.latency ? current : best
+            );
+            
+            if (fastestServer.latency < Infinity) {
+                showCountdown();
             }
         }
 
-        // 跳转函数（isManual：是否手动点击）
-        function goIPv4(isManual) {
-            if (isJumping) return;
-            isJumping = true;
-            
-            // 清除所有定时器（手动点击时取消自动跳转）
-            clearAllTimers();
-            
-            if (isManual) {
-                document.getElementById('countdown').textContent = "已选择IPv4访问，正在跳转...";
-            }
-            
-            // 使用replace替代href，移除当前页面从历史记录
-            window.location.replace(IPV4_URL);
-        }
-
-        function goIPv6(isManual) {
-            if (isJumping) return;
-            isJumping = true;
-            
-            // 清除所有定时器（手动点击时取消自动跳转）
-            clearAllTimers();
-            
-            if (isManual) {
-                document.getElementById('countdown').textContent = "已选择IPv6访问，正在跳转...";
-            }
-            
-            // 使用replace替代href，移除当前页面从历史记录
-            window.location.replace(IPV6_URL);
-        }
-
-        // 测速函数
-        async function testSpeed(url) {
-            // 如果已经开始跳转，停止测速
-            if (isJumping) return Infinity;
-            
-            const start = Date.now();
-            try {
-                // 使用GET方法提高兼容性，添加超时控制
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3000);
-                
-                await fetch(url, { 
-                    method: 'GET', 
-                    mode: 'no-cors',
-                    signal: controller.signal,
-                    cache: 'no-cache'
-                });
-                
-                clearTimeout(timeoutId);
-                return Date.now() - start;
-            } catch (e) {
-                return Infinity; // 访问失败返回无穷大
-            }
-        }
-
-        // 更新测速显示
-        function updateSpeedDisplay() {
-            // 如果已经开始跳转，停止更新
-            if (isJumping) return;
-            
-            const ipv4SpeedEl = document.getElementById('ipv4Speed');
-            const ipv6SpeedEl = document.getElementById('ipv6Speed');
-            const alertBox = document.getElementById('alertBox');
-            let alertHtml = "";
-
-            // 更新IPv4显示
-            if (ipv4Delay === Infinity) {
-                ipv4SpeedEl.textContent = "访问失败";
-                ipv4SpeedEl.className = "speed-value speed-warning";
-                alertHtml += '<div class="alert">⚠️ IPv4访问失败，将自动切换到IPv6</div>';
-            } else {
-                ipv4SpeedEl.textContent = `${ipv4Delay}ms`;
-                ipv4SpeedEl.className = ipv4Delay > MAX_DELAY 
-                    ? "speed-value speed-warning" 
-                    : "speed-value speed-normal";
-                
-                if (ipv4Delay > MAX_DELAY) {
-                    alertHtml += '<div class="alert">⚠️ IPv4延迟过高，将自动切换到IPv6</div>';
-                }
-            }
-
-            // 更新IPv6显示
-            if (ipv6Delay === Infinity) {
-                ipv6SpeedEl.textContent = "访问失败";
-                ipv6SpeedEl.className = "speed-value speed-warning";
-                if (ipv4Delay > MAX_DELAY) {
-                    alertHtml += '<div class="alert">⚠️ IPv6也访问失败，请检查网络</div>';
-                }
-            } else {
-                ipv6SpeedEl.textContent = `${ipv6Delay}ms`;
-                ipv6SpeedEl.className = "speed-value speed-normal";
-            }
-
-            // 显示提示
-            alertBox.innerHTML = alertHtml;
-        }
-
-        // 页面卸载前的清理
-        window.onbeforeunload = function() {
-            clearAllTimers();
-        };
-
-        // 页面加载后执行
-        window.onload = async function () {
-            // 启动3秒倒计时
-            initCountdown();
-            
-            // 同时测速IPv4和IPv6
-            [ipv4Delay, ipv6Delay] = await Promise.all([
-                testSpeed(IPV4_URL),
-                testSpeed(IPV6_URL)
-            ]);
-            
-            // 更新测速结果显示
-            updateSpeedDisplay();
-        }
+        // 页面加载后开始测试
+        window.onload = runSpeedTest;
     </script>
 </body>
 </html>
